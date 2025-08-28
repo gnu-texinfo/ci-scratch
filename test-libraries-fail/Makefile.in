@@ -148,7 +148,11 @@ am_lib2_la_OBJECTS = lib2.lo
 lib2_la_OBJECTS = $(am_lib2_la_OBJECTS)
 am_prog_OBJECTS = prog.$(OBJEXT)
 prog_OBJECTS = $(am_prog_OBJECTS)
-prog_LDADD = $(LDADD)
+am__DEPENDENCIES_1 =
+prog_DEPENDENCIES = $(am__DEPENDENCIES_1)
+prog_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(prog_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -461,12 +465,18 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBADD_DL = @LIBADD_DL@
+LIBADD_DLD_LINK = @LIBADD_DLD_LINK@
+LIBADD_DLOPEN = @LIBADD_DLOPEN@
+LIBADD_SHL_LOAD = @LIBADD_SHL_LOAD@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+LT_DLLOADERS = @LT_DLLOADERS@
+LT_DLPREOPEN = @LT_DLPREOPEN@
 LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
@@ -549,12 +559,13 @@ top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
 prog_SOURCES = prog.c
 #prog_LDADD = lib1.la
-#prog_LDFLAGS = -ldl
+prog_LDADD = $(LIBADD_DLOPEN)
+prog_LDFLAGS = -ldl
 
 # NB with noinst_ prefix dynamic libraries aren't built
 lib_LTLIBRARIES = lib1.la lib2.la
 lib1_la_SOURCES = lib1.c
-lib1_la_LDFLAGS = -module
+lib1_la_LDFLAGS = -module $(platform_LDFLAGS)
 lib2_la_SOURCES = lib2.c
 lib1_la_LIBADD = lib2.la
 TESTS = test_prog.sh
@@ -641,7 +652,7 @@ lib2.la: $(lib2_la_OBJECTS) $(lib2_la_DEPENDENCIES) $(EXTRA_lib2_la_DEPENDENCIES
 
 prog$(EXEEXT): $(prog_OBJECTS) $(prog_DEPENDENCIES) $(EXTRA_prog_DEPENDENCIES) 
 	@rm -f prog$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(prog_OBJECTS) $(prog_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(prog_LINK) $(prog_OBJECTS) $(prog_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

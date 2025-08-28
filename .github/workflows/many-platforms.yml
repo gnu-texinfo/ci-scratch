@@ -210,14 +210,14 @@ jobs:
       # Install Homebrew packages.
       # List of packages: https://formulae.brew.sh/
       # - run: brew install ...
+          #wget -O macos-compile "${gnulib_url_prefix}build-aux/macos-compile"
+          #chmod a+x macos-compile
+          #export CPPFLAGS="-I$HOME/include -Wall"
+          #export LDFLAGS="-L$HOME/lib"
+          #export CC="`pwd`/macos-compile clang"
+          #export CXX="`pwd`/macos-compile clang++"
       - run: |
           pwd
-          wget -O macos-compile "${gnulib_url_prefix}build-aux/macos-compile"
-          chmod a+x macos-compile
-          export CPPFLAGS="-I$HOME/include -Wall"
-          export LDFLAGS="-L$HOME/lib"
-          export CC="`pwd`/macos-compile clang"
-          export CXX="`pwd`/macos-compile clang++"
           ./build-on.sh 'testdir-all' '' 'make' "$HOME" ''
       # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
       #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
@@ -537,7 +537,7 @@ jobs:
           platform: x86_64
           # Install Cygwin packages.
           # List of packages: https://cygwin.com/packages/package_list.html
-          packages: ${{ matrix.bitness == 32 && 'mingw64-i686-gcc-core mingw64-i686-headers mingw64-i686-runtime mingw64-i686-gcc-g++ mingw64-i686-win-iconv' || 'mingw64-x86_64-gcc-core mingw64-x86_64-headers mingw64-x86_64-runtime mingw64-x86_64-gcc-g++ mingw64-x86_64-win-iconv' }} make
+          packages: ${{ matrix.bitness == 32 && 'mingw64-i686-gcc-core mingw64-i686-headers mingw64-i686-runtime mingw64-i686-dlfcn mingw64-i686-gcc-g++ mingw64-i686-win-iconv' || 'mingw64-x86_64-gcc-core mingw64-x86_64-headers mingw64-x86_64-runtime mingw64-x86_64-dlfcn mingw64-x86_64-gcc-g++ mingw64-x86_64-win-iconv' }} make
       - name: cygcheck
         run: cygcheck -V
       - name: cygcheck
@@ -576,6 +576,9 @@ jobs:
           overwrite: true
   check-msvc:
     name: make check on MSVC
+    # Do not do anything on MSVC as it is not supported for the main Texinfo
+    # CI
+    if: ${{ false }}
     # Doc: https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
     strategy:
       fail-fast: false
