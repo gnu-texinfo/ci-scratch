@@ -16,3 +16,5 @@ lib1_la_LDFLAGS = -module
 lib2_la_SOURCES = lib2.c
 
 lib1_la_LIBADD = lib2.la
+
+TESTS = test_prog.sh

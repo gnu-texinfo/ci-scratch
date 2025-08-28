@@ -5,10 +5,14 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/stat.h>
 
 void (*fooptr) (void);
 
-#define SHARED_LIB ".libs/lib1.so.0.0.0"
+const char *shared_libs[3] = {
+  ".libs/lib1.so.0.0.0",
+  ".libs/lib1.so.0.0",
+  NULL};
 
 int
 main (void)
@@ -20,8 +24,19 @@ main (void)
       exit (1);
     }
 
+  const char *shared_lib = 0;
+  int i;
+  for (i = 0; shared_libs[i]; i++)
+    {
+      struct stat sb;
+      if (stat (shared_libs[i], &sb) == 0)
+        {
+          shared_lib = shared_libs[i];
+          break;
+        }
+    }
   char *library_name;
-  asprintf (&library_name, "%s/%s", cwd, SHARED_LIB);
+  asprintf (&library_name, "%s/%s", cwd, shared_lib);
 
   void *handle;
 

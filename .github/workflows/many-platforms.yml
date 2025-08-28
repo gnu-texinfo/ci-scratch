@@ -31,8 +31,8 @@
 
 name: Build and make check
 
-#on:
-#  push:
+on:
+  push:
 
 # Variables.
 env:
