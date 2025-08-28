@@ -13,7 +13,7 @@ AC_MSG_CHECKING([Platform link for $host])
 # `(gnulib)Libtool and Windows'.
 case "$host" in *-mingw32 | *-mingw64 | *-cygwin )
   # to be used for shared libraries
-  platform_LDFLAGS='-no-undefined' 
+  platform_LDFLAGS='-no-undefined'
   ;;
 esac
 AC_MSG_RESULT([$platform_LDFLAGS])

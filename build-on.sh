@@ -62,7 +62,7 @@ CPPFLAGS="$CPPFLAGS -DCONTINUE_AFTER_ASSERT" \
 ../configure --config-cache $configure_options > log1 2>&1; rc=$?; cat log1; test $rc = 0 || exit 1
 
 # Build.
-$make > log2 2>&1; rc=$?; cat log2; test $rc = 0 || exit 1
+$make > log2 2>&1; rc=$?; cat log2; ls .libs; test $rc = 0 || exit 1
 
 if ! $cross_compiling; then
   # Run the tests.
