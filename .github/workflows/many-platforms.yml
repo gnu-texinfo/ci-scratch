@@ -1,0 +1,830 @@
+# A GitHub Actions workflow that builds a package on many platforms.
+
+# Copyright (C) 2024-2025 Free Software Foundation, Inc.
+#
+# This file is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License,
+# or (at your option) any later version.
+#
+# This file is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# Reference documentation for this file:
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+#
+# Syntax of multiline strings in YAML: https://yaml-multiline.info/
+#
+# Customization:
+# - Review and adapt the part of this file before the 'jobs:' line.
+# - You can disable a particular job by adding a line
+#     if: ${{ false }}
+# - You can disable a particular matrix value for a particular job by adding an
+#   'exclude' element to the 'matrix' element, such as:
+#        exclude:
+#          - bitness: 64
+
+name: Build and make check
+
+#on:
+#  push:
+
+# Variables.
+env:
+  package: texinfo
+
+jobs:
+  # We can run max. 20 "make check" jobs in parallel, max. 5 of them being on macOS.
+  # See https://docs.github.com/en/actions/learn-github-actions/usage-limits-billing-and-administration
+  check-linux-gnu-ubuntu:
+    name: make check on Ubuntu GNU/Linux
+    runs-on: ubuntu-22.04
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      - run: uname -a
+      - run: id
+      - run: env | LC_ALL=C sort
+      - run: pwd
+      # Install Ubuntu packages.
+      # List of packages: https://packages.ubuntu.com/
+      # - run: sudo apt update; sudo apt install ...
+      - run: |
+          pwd
+          export CPPFLAGS="-Wall"
+          ./build-on.sh 'testdir-all' '' 'make' "$HOME" ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-linux-gnu-ubuntu
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-linux-gnu-centos:
+    name: make check on CentOS GNU/Linux
+    runs-on: ubuntu-22.04
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      - uses: addnab/docker-run-action@v3
+        with:
+          image: centos:7
+          options: -v ${{ github.workspace }}:/work
+          run: |
+            uname -a
+            id
+            env | LC_ALL=C sort
+            pwd
+            : "The CentOS packages repository has moved on 2024-07-01."
+            sed -i -e 's|^mirrorlist=|#mirrorlist=|' -e 's|^#baseurl=http://mirror\.centos\.org|baseurl=http://vault.centos.org|' /etc/yum.repos.d/CentOS-Base.repo
+            : "Install CentOS Linux packages"
+            : "List of packages: http://vault.centos.org/centos/7/os/x86_64/Packages/"
+            yum -y install make gcc gcc-c++
+            cd /work
+            ls -l
+            export CPPFLAGS="-Wall"
+            export CC="gcc -std=gnu99"
+            ./build-on.sh 'testdir-all' '' 'make' '/usr/local' ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-linux-gnu-centos
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-linux-gnu-alma:
+    name: make check on AlmaLinux GNU/Linux
+    runs-on: ubuntu-22.04
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      - uses: addnab/docker-run-action@v3
+        with:
+          image: almalinux:9
+          options: -v ${{ github.workspace }}:/work
+          run: |
+            uname -a
+            id
+            env | LC_ALL=C sort
+            pwd
+            : "Install AlmaLinux packages"
+            : "List of packages: https://repo.almalinux.org/almalinux/9/BaseOS/x86_64/os/Packages/"
+            : "                  https://repo.almalinux.org/almalinux/9/AppStream/x86_64/os/Packages/"
+            : "                  https://repo.almalinux.org/almalinux/9/CRB/x86_64/os/Packages/"
+            : "                  https://repo.almalinux.org/almalinux/9/devel/x86_64/os/Packages/"
+            : "Explanation: https://wiki.almalinux.org/repos/AlmaLinux.html"
+            yum -y install make gcc gcc-c++ diffutils
+            cd /work
+            ls -l
+            export CPPFLAGS="-Wall"
+            export CC="gcc -std=gnu99"
+            ./build-on.sh 'testdir-all' '' 'make' '/usr/local' ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-linux-gnu-alma
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-linux-alpine:
+    name: make check on Alpine Linux
+    runs-on: ubuntu-22.04
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      - uses: addnab/docker-run-action@v3
+        with:
+          image: alpine:3
+          options: -v ${{ github.workspace }}:/work
+          run: |
+            uname -a
+            id
+            env | LC_ALL=C sort
+            pwd
+            : "Install Alpine Linux packages"
+            : "List of packages: https://pkgs.alpinelinux.org/packages"
+            apk add make gcc musl-dev g++ musl-locales
+            cd /work
+            ls -l
+            export CPPFLAGS="-Wall"
+            ./build-on.sh 'testdir-all' '' 'make' '/usr/local' ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-linux-alpine
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-macos:
+    name: make check on macOS
+    # Doc: https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-13, macos-14, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      - run: uname -a
+      - run: id
+      - run: env | LC_ALL=C sort
+      - run: pwd
+      # Install Homebrew packages.
+      # List of packages: https://formulae.brew.sh/
+      # - run: brew install ...
+      - run: |
+          pwd
+          wget -O macos-compile "${gnulib_url_prefix}build-aux/macos-compile"
+          chmod a+x macos-compile
+          export CPPFLAGS="-I$HOME/include -Wall"
+          export LDFLAGS="-L$HOME/lib"
+          export CC="`pwd`/macos-compile clang"
+          export CXX="`pwd`/macos-compile clang++"
+          ./build-on.sh 'testdir-all' '' 'make' "$HOME" ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ matrix.os }}
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-freebsd:
+    name: make check on FreeBSD
+    # The FreeBSD runners sometimes get stuck.
+    timeout-minutes: 15
+    runs-on: ubuntu-22.04
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      # Doc: https://github.com/vmactions/freebsd-vm
+      - uses: vmactions/freebsd-vm@v1
+        with:
+          release: '14.0'
+          mem: 1024
+          usesh: true
+          run: |
+            set -x
+            uname -a
+            id
+            env | LC_ALL=C sort
+            pwd
+            : "Install FreeBSD packages"
+            : "List of packages: https://ports.freebsd.org/cgi/ports.cgi"
+            pkg install -y libbacktrace
+            ls -l
+            export CPPFLAGS="-I/usr/local/include -Wall"
+            export LDFLAGS="-L/usr/local/lib"
+            ./build-on.sh 'testdir-all' '' 'make' '/usr/local' ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-freebsd
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-netbsd:
+    name: make check on NetBSD
+    runs-on: ubuntu-22.04
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      # Doc: https://github.com/vmactions/netbsd-vm
+      - uses: vmactions/netbsd-vm@v1
+        with:
+          release: '10.0'
+          mem: 1024
+          usesh: true
+          run: |
+            set -x
+            uname -a
+            id
+            env | LC_ALL=C sort
+            pwd
+            : "Install NetBSD packages"
+            : "List of packages: https://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/index-all.html"
+            : /usr/sbin/pkg_add ...
+            : "or"
+            : /usr/sbin/pkg_add pkgin
+            : pkgin install ...
+            ls -l
+            export CPPFLAGS="-I/usr/pkg/include -Wall"
+            export LDFLAGS="-L/usr/pkg/lib"
+            ./build-on.sh 'testdir-all' '' 'make' '/usr/pkg' ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-netbsd
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-openbsd:
+    name: make check on OpenBSD
+    runs-on: ubuntu-22.04
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      # Doc: https://github.com/vmactions/openbsd-vm
+      - uses: vmactions/openbsd-vm@v1
+        with:
+          release: '7.6'
+          mem: 1024
+          usesh: true
+          # Avoid 'sync: sshfs' since it causes trouble with file timestamps
+          # and errors from chown() calls:
+          # - BSD tar error messages for r--r--r-- files: "tar: Unable to create ...: Permission denied"
+          # - GNU tar warnings "Cannot change ownership to uid 0, gid 0: Permission denied"
+          #sync: sshfs
+          run: |
+            set -x
+            uname -a
+            id
+            env | LC_ALL=C sort
+            pwd
+            : "Install OpenBSD packages"
+            : "List of packages: https://cdn.openbsd.org/pub/OpenBSD/7.6/packages/amd64/"
+            pkg_add gmake
+            export PATH=/usr/local/bin:$PATH
+            ls -l
+            export CPPFLAGS="-I/usr/local/include -Wall"
+            export LDFLAGS="-L/usr/local/lib"
+            ./build-on.sh 'testdir-all' '' 'gmake' '/usr/local' ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-openbsd
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-solaris11:
+    name: make check on Solaris 11
+    runs-on: ubuntu-22.04
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      # Doc: https://github.com/vmactions/solaris-vm
+      - uses: vmactions/solaris-vm@v1
+        with:
+          # We can choose among
+          # - the '11.4' image and installing gcc from the Oracle packages site, or
+          # - the '11.4-gcc' image, that has gcc installed in /opt/csw/bin.
+          #   Note: Somehow it does not declare the renameat() function.
+          release: '11.4'
+          mem: 2048
+          prepare: |
+            : "Install Solaris packages"
+            : "List of packages: http://pkg.oracle.com/solaris/release/en/index.shtml"
+            pkg install gcc gcc-c++; ret=$?; test $ret = 0 || test $ret = 4
+          run: |
+            set -x
+            uname -a
+            id
+            env | LC_ALL=C sort
+            pwd
+            ls -l
+            : "The locale set by default, C.UTF-8, is not a valid locale on Solaris 11."
+            export LANG=en_US.UTF-8
+            export PATH="$HOME/bin:$PATH"
+            export CPPFLAGS="-I$HOME/include -Wall"
+            export LDFLAGS="-L$HOME/lib"
+            export CC="gcc -m64"
+            export CXX="gcc -m64"
+            ./build-on.sh 'testdir-all' '' 'make' "$HOME" ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-solaris11
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-solaris11-omnios:
+    name: make check on Solaris 11 OmniOS
+    runs-on: ubuntu-22.04
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      # Doc: https://github.com/vmactions/omnios-vm
+      - uses: vmactions/omnios-vm@v1
+        with:
+          release: "r151048"
+          mem: 2048
+          prepare: |
+            : "Install Solaris packages"
+            : "List of packages: https://pkg.omnios.org/r151048/core/en/index.shtml"
+            pkg install \
+                developer/gcc13 developer/object-file system/header system/library/math \
+                developer/build/gnu-make
+          run: |
+            set -x
+            uname -a
+            id
+            env | LC_ALL=C sort
+            pwd
+            ls -l
+            export CPPFLAGS="-I$HOME/include -Wall"
+            export LDFLAGS="-L$HOME/lib"
+            ./build-on.sh 'testdir-all' '' 'gmake' "$HOME" ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-solaris11-omnios
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-cygwin:
+    name: make check on Cygwin
+    # Doc: https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
+    strategy:
+      fail-fast: false
+      matrix:
+        bitness: [32, 64]
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
+    env:
+      CYGWIN_NOWINPATH: 1
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - run: git config --global core.autocrlf input
+        shell: cmd
+      - uses: actions/checkout@v4
+      # Doc: https://github.com/cygwin/cygwin-install-action
+      - uses: cygwin/cygwin-install-action@v4
+        with:
+          platform: ${{ matrix.bitness == 32 && 'x86' || 'x86_64' }}
+          # Install Cygwin packages.
+          # List of packages: https://cygwin.com/packages/package_list.html
+          packages: gcc-core make gcc-g++ libiconv-devel
+      - name: cygcheck
+        run: cygcheck -V
+      - name: cygcheck
+        run: cygcheck -s -r
+      - name: Windows version
+        run: cmd /c ver
+      - run: uname -a
+      - run: id
+      - run: env | LC_ALL=C sort
+      - run: pwd
+      - run: ls -l
+      - run: echo "$PATH"
+      - run: ls -l /usr/bin
+      - name: Build in Cygwin
+        run: |
+          export CPPFLAGS="-Wall"
+          ./build-on.sh 'testdir-all' '' 'make' '/usr' ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-cygwin${{ matrix.bitness }}
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-mingw:
+    name: make check on mingw
+    # Doc: https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
+    strategy:
+      fail-fast: false
+      matrix:
+        bitness: [32, 64]
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
+    env:
+      CYGWIN_NOWINPATH: 1
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - run: git config --global core.autocrlf input
+        shell: cmd
+      - uses: actions/checkout@v4
+      # Doc: https://github.com/cygwin/cygwin-install-action
+      - uses: cygwin/cygwin-install-action@v4
+        with:
+          platform: x86_64
+          # Install Cygwin packages.
+          # List of packages: https://cygwin.com/packages/package_list.html
+          packages: ${{ matrix.bitness == 32 && 'mingw64-i686-gcc-core mingw64-i686-headers mingw64-i686-runtime mingw64-i686-gcc-g++ mingw64-i686-win-iconv' || 'mingw64-x86_64-gcc-core mingw64-x86_64-headers mingw64-x86_64-runtime mingw64-x86_64-gcc-g++ mingw64-x86_64-win-iconv' }} make
+      - name: cygcheck
+        run: cygcheck -V
+      - name: cygcheck
+        run: cygcheck -s -r
+      - name: Windows version
+        run: cmd /c ver
+      - run: uname -a
+      - run: id
+      - run: env | LC_ALL=C sort
+      - run: pwd
+      - run: ls -l
+      - run: echo "$PATH"
+      - run: ls -l /usr/bin
+      - name: Build in Cygwin
+        run: |
+          set -x
+          PATH=/usr/${{ matrix.bitness == 32 && 'i686' || 'x86_64' }}-w64-mingw32/sys-root/mingw/bin:$PATH
+          export CPPFLAGS="-Wall"
+          export CC=${{ matrix.bitness == 32 && 'i686' || 'x86_64' }}-w64-mingw32-gcc
+          export CXX=${{ matrix.bitness == 32 && 'i686' || 'x86_64' }}-w64-mingw32-g++
+          ./build-on.sh 'testdir-all-for-mingw' '--host=${{ matrix.bitness == 32 && 'i686' || 'x86_64' }}-w64-mingw32' 'make' '/usr/${{ matrix.bitness == 32 && 'i686' || 'x86_64' }}-w64-mingw32/sys-root/mingw' ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-mingw${{ matrix.bitness }}
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-msvc:
+    name: make check on MSVC
+    # Doc: https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
+    strategy:
+      fail-fast: false
+      matrix:
+        bitness: [32, 64]
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
+    env:
+      CYGWIN_NOWINPATH: 1
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - run: git config --global core.autocrlf input
+        shell: cmd
+      - uses: actions/checkout@v4
+      # Doc: https://github.com/ilammy/msvc-dev-cmd
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.bitness == 32 && 'x86' || 'x64' }}
+      # Doc: https://github.com/cygwin/cygwin-install-action
+      - uses: cygwin/cygwin-install-action@v4
+        with:
+          platform: x86_64
+          # Install Cygwin packages.
+          # List of packages: https://cygwin.com/packages/package_list.html
+          packages: wget ${{ matrix.bitness == 32 && 'mingw64-i686-binutils mingw64-i686-gcc-core' || 'mingw64-x86_64-binutils mingw64-x86_64-gcc-core' }} make
+      - name: cygcheck
+        run: cygcheck -V
+      - name: cygcheck
+        run: cygcheck -s -r
+      - name: Windows version
+        run: cmd /c ver
+      - run: uname -a
+      - run: id
+      - run: env | LC_ALL=C sort
+      - run: pwd
+      - run: ls -l
+      - run: echo "$PATH"
+      - run: ls -l /usr/bin
+      - run: |
+          wget -O ar-lib "${gnulib_url_prefix}build-aux/ar-lib"
+          wget -O compile "${gnulib_url_prefix}build-aux/compile"
+          chmod a+x ar-lib compile
+      - name: Build in Cygwin
+        env:
+          arch: ${{ matrix.bitness == 32 && 'x86' || 'x64' }}
+          pathelementsuffix: ${{ matrix.bitness == 64 && '/amd64' || '' }}
+          libelementsuffix: ${{ matrix.bitness == 64 && '\amd64' || '' }}
+        run: |
+          set -x
+          : "Windows C library headers and libraries."
+          WindowsCrtIncludeDir='C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt'
+          WindowsCrtLibDir='C:\Program Files (x86)\Windows Kits\10\Lib\10.0.10240.0\ucrt\'
+          INCLUDE="${WindowsCrtIncludeDir};$INCLUDE"
+          LIB="${WindowsCrtLibDir}${arch};$LIB"
+          : "Windows API headers and libraries."
+          WindowsSdkIncludeDir='C:\Program Files (x86)\Windows Kits\8.1\Include\'
+          WindowsSdkLibDir='C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\'
+          INCLUDE="${WindowsSdkIncludeDir}um;${WindowsSdkIncludeDir}shared;$INCLUDE"
+          LIB="${WindowsSdkLibDir}${arch};$LIB"
+          : "Visual C++ tools, headers and libraries."
+          VSINSTALLDIR='C:\Program Files (x86)\Microsoft Visual Studio 14.0'
+          VCINSTALLDIR="${VSINSTALLDIR}"'\VC'
+          PATH=`cygpath -u "${VCINSTALLDIR}"`/bin${pathelementsuffix}:"$PATH"
+          INCLUDE="${VCINSTALLDIR}"'\include;'"${INCLUDE}"
+          LIB="${VCINSTALLDIR}"'\lib'"${libelementsuffix};${LIB}"
+          export INCLUDE LIB
+          : "Possible values are _WIN32_WINNT_WINXP, _WIN32_WINNT_VISTA, _WIN32_WINNT_WIN7"
+          win32_target=_WIN32_WINNT_WINXP
+          export CPPFLAGS="-D_WIN32_WINNT=$win32_target -I/usr/local/msvc${{ matrix.bitness }}/include"
+          export LDFLAGS="-L/usr/local/msvc${{ matrix.bitness }}/lib"
+          export CC="`pwd`/compile cl -nologo"; export CFLAGS="-MD"
+          export CXX="`pwd`/compile cl -nologo"; export CXXFLAGS="-MD"
+          export LD="link"
+          export NM="dumpbin -symbols"
+          export STRIP=":"
+          export AR="`pwd`/ar-lib lib"
+          export RANLIB=":"
+          ./build-on.sh 'testdir-all-for-mingw' '--host=${{ matrix.bitness == 32 && 'i686' || 'x86_64' }}-w64-mingw32' 'make' '/usr/local/msvc${{ matrix.bitness }}' ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-msvc${{ matrix.bitness }}
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  # This is not a platform-specific test, but very useful for finding bugs.
+  check-sanitized:
+    name: make check with sanitizers
+    runs-on: ubuntu-22.04
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      - run: uname -a
+      - run: id
+      - run: env | LC_ALL=C sort
+      - run: pwd
+      # Install Ubuntu packages.
+      # List of packages: https://packages.ubuntu.com/
+      # - run: sudo apt update; sudo apt install ...
+      - run: |
+          pwd
+          export CPPFLAGS="-I$HOME/include -Wall"
+          export LDFLAGS="-L$HOME/lib"
+          export CC="clang -fsanitize=address,undefined,signed-integer-overflow,shift,integer-divide-by-zero -fno-sanitize-recover=undefined"
+          export CFLAGS="-O0 -fno-omit-frame-pointer -ggdb"
+          export CXX="clang++ -fsanitize=address,undefined,signed-integer-overflow,shift,integer-divide-by-zero -fno-sanitize-recover=undefined"
+          export CXXFLAGS="-O0 -fno-omit-frame-pointer -ggdb"
+          export ASAN_OPTIONS="detect_leaks=0 abort_on_error=1 allocator_may_return_null=1"
+          ./build-on.sh 'testdir-all' '' 'make' "$HOME" ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-sanitized
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-clang-approach1:
+    name: make check with clang 18 downloaded
+    # Takes 1 min. longer than check-newest-clang.
+    runs-on: ubuntu-22.04
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      - run: uname -a
+      - run: id
+      - run: env | LC_ALL=C sort
+      - run: pwd
+      # Takes 5 seconds for the download (1 GB, 200 MB/sec) and 1:12 min to uncompress.
+      - run: |
+          date
+          wget -O clang+llvm.tar.xz https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+          tar xf clang+llvm.tar.xz
+          mv clang+llvm-*-x86_64-linux-gnu-ubuntu-18.04 clang+llvm
+          date
+      # Install Ubuntu packages.
+      # List of packages: https://packages.ubuntu.com/
+      - run: sudo apt update; sudo apt install libtinfo5
+      - run: |
+          pwd
+          clangdir=`pwd`/clang+llvm
+          export CC="$clangdir/bin/clang -Wl,-rpath,$clangdir/lib"
+          export CXX="$clangdir/bin/clang++ -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -L/usr/lib/gcc/x86_64-linux-gnu/11 -Wl,-rpath,$clangdir/lib"
+          export CPPFLAGS="-Wall"
+          ./build-on.sh 'testdir-all' '' 'make' "$HOME" ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-clang-approach1
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  check-newest-clang:
+    name: make check with the newest clang release
+    runs-on: ubuntu-22.04
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      - uses: addnab/docker-run-action@v3
+        with:
+          # A Docker container based on Debian 12.
+          image: tuxmake/clang-20:latest
+          options: -v ${{ github.workspace }}:/work
+          run: |
+            uname -a
+            cat /etc/os-release
+            id
+            env | LC_ALL=C sort
+            pwd
+            : "Install Ubuntu packages."
+            : "List of packages: https://packages.ubuntu.com/"
+            : "apt update; apt -y install ..."
+            cd /work
+            ls -l
+            export CPPFLAGS="-Wall"
+            export CC=clang
+            export CXX=clang++
+            ./build-on.sh 'testdir-all' '' 'make' '/usr/local' ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-newest-clang
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[123]
+            */build/test-*.log
+          retention-days: 28
+          overwrite: true
+  # This is not a platform-specific test, but very useful for finding cross-compilation bugs.
+  check-cross:
+    name: make check with a cross-compiler
+    runs-on: ubuntu-22.04
+    steps:
+      # This is needed because we run a script stored in this repository.
+      - uses: actions/checkout@v4
+      - run: uname -a
+      - run: id
+      - run: env | LC_ALL=C sort
+      - run: pwd
+      # Install Ubuntu packages.
+      # List of packages: https://packages.ubuntu.com/
+      - run: sudo apt update; sudo apt install g++-riscv64-linux-gnu
+      - run: |
+          pwd
+          export CPPFLAGS="-Wall"
+          export CC="riscv64-linux-gnu-gcc"
+          export CXX="riscv64-linux-gnu-g++"
+          ./build-on.sh 'testdir-all' '--host=riscv64-linux-gnu' 'make' "$HOME" ''
+      # Doc: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      #      https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-cross
+          path: |
+            libbacktrace/log[124]
+            */build/config.cache
+            */build/config.log
+            */build/config.status
+            */build/log[12]
+          retention-days: 28
+          overwrite: true
