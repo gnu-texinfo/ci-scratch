@@ -15,6 +15,7 @@ lib1_la_SOURCES = lib1.c
 lib1_la_LDFLAGS = -module $(platform_LDFLAGS)
 
 lib2_la_SOURCES = lib2.c
+lib2_la_LDFLAGS = $(platform_LDFLAGS)
 
 #lib1_la_LIBADD = lib2.la
 

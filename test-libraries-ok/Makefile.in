@@ -146,6 +146,9 @@ lib1_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 lib2_la_LIBADD =
 am_lib2_la_OBJECTS = lib2.lo
 lib2_la_OBJECTS = $(am_lib2_la_OBJECTS)
+lib2_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(lib2_la_LDFLAGS) $(LDFLAGS) -o $@
 am_prog_OBJECTS = prog.$(OBJEXT)
 prog_OBJECTS = $(am_prog_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -566,6 +569,7 @@ lib_LTLIBRARIES = lib1.la lib2.la
 lib1_la_SOURCES = lib1.c
 lib1_la_LDFLAGS = -module $(platform_LDFLAGS)
 lib2_la_SOURCES = lib2.c
+lib2_la_LDFLAGS = $(platform_LDFLAGS)
 
 #lib1_la_LIBADD = lib2.la
 TESTS = test_prog.sh
@@ -648,7 +652,7 @@ lib1.la: $(lib1_la_OBJECTS) $(lib1_la_DEPENDENCIES) $(EXTRA_lib1_la_DEPENDENCIES
 	$(AM_V_CCLD)$(lib1_la_LINK) -rpath $(libdir) $(lib1_la_OBJECTS) $(lib1_la_LIBADD) $(LIBS)
 
 lib2.la: $(lib2_la_OBJECTS) $(lib2_la_DEPENDENCIES) $(EXTRA_lib2_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(lib2_la_OBJECTS) $(lib2_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(lib2_la_LINK) -rpath $(libdir) $(lib2_la_OBJECTS) $(lib2_la_LIBADD) $(LIBS)
 
 prog$(EXEEXT): $(prog_OBJECTS) $(prog_DEPENDENCIES) $(EXTRA_prog_DEPENDENCIES) 
 	@rm -f prog$(EXEEXT)
