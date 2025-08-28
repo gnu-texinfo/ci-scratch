@@ -15,6 +15,10 @@ const char *shared_libs[] = {
   ".libs/lib1.so.0.0",
   /* on macos */
   ".libs/lib1.0.so",
+  /* mingw on cygwin */
+  ".libs/lib1-0.dll",
+  /* cygwin */
+  ".libs/cyg1-0.dll",
   NULL};
 
 int
