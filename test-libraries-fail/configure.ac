@@ -4,9 +4,13 @@ AM_INIT_AUTOMAKE
 
 LT_INIT([disable-static dlopen])
 
+AC_PROG_CC
+
 LT_LIB_DLLOAD
 
-AC_PROG_CC
+DLLIB=
+AC_CHECK_LIB(dl, dlopen, [DLLIB='-ldl'])
+AC_SUBST(DLLIB)
 
 AC_MSG_CHECKING([Platform link for $host])
 # Use the -no-undefined flag on MS-Windows.  See info node
@@ -18,6 +22,7 @@ case "$host" in *-mingw32 | *-mingw64 | *-cygwin )
 esac
 AC_MSG_RESULT([$platform_LDFLAGS])
 
+AC_SUBST([platform_LDFLAGS], [$platform_LDFLAGS])
 
 AC_CONFIG_FILES([Makefile])
 

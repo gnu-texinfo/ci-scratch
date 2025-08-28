@@ -9,9 +9,12 @@
 
 void (*fooptr) (void);
 
-const char *shared_libs[3] = {
+const char *shared_libs[] = {
   ".libs/lib1.so.0.0.0",
+  /* OpenBSD */
   ".libs/lib1.so.0.0",
+  /* on macos */
+  ".libs/lib1.0.so",
   NULL};
 
 int

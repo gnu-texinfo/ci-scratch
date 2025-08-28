@@ -5,8 +5,8 @@ noinst_PROGRAMS = prog
 
 prog_SOURCES = prog.c
 #prog_LDADD = lib1.la
-prog_LDADD = $(LIBADD_DLOPEN)
-prog_LDFLAGS = -ldl
+prog_LDADD = $(DLLIB) $(LIBADD_DLOPEN)
+#prog_LDFLAGS = -ldl
 
 # NB with noinst_ prefix dynamic libraries aren't built
 lib_LTLIBRARIES = lib1.la lib2.la
