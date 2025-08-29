@@ -1,6 +1,3 @@
-test-libraries-fail/autom4te.cache/
-test-libraries-fail/build/
-test-libraries-fail/configure~
-test-libraries-ok/autom4te.cache/
-test-libraries-ok/build/
-test-libraries-ok/configure~
+test-libraries-*/autom4te.cache/
+test-libraries-*/build/
+test-libraries-*/configure~
