@@ -71,9 +71,9 @@ main (void)
           char *library_name = library_names[i];
           char *error = errors[i];
           if (errors[i])
-            printf ("%s: dlopen error: %s\n", library_name, error);
+            fprintf (stderr, "%s: dlopen error: %s\n", library_name, error);
           else
-            printf ("%s: dlopen error\n", library_name);
+            fprintf (stderr, "%s: dlopen error\n", library_name);
         }
       exit (1);
     }
@@ -81,7 +81,7 @@ main (void)
   char *error = dlerror ();
   if (error)
     {
-      printf ("dlsym error: %s\n", error);
+      fprintf (stderr, "dlsym error: %s\n", error);
       exit (1);
     }
   fooptr ();
