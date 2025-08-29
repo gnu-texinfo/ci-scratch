@@ -59,7 +59,7 @@ main (void)
       if (!handle)
         {
           char *error = dlerror ();
-          errors[i] = error;
+          errors[i] = strdup (error);
         }
       else
         break;
