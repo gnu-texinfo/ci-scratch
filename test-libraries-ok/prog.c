@@ -9,7 +9,7 @@
 
 void (*fooptr) (void);
 
-const char *shared_libs[] = {
+char *shared_libs[] = {
   ".libs/lib1.so.0.0.0",
   /* OpenBSD */
   ".libs/lib1.so.0.0",
@@ -31,7 +31,7 @@ main (void)
       exit (1);
     }
 
-  const char *shared_lib = 0;
+  char *shared_lib = 0;
   int i;
   for (i = 0; shared_libs[i]; i++)
     {
@@ -42,22 +42,39 @@ main (void)
           break;
         }
     }
-  char *library_name;
-  asprintf (&library_name, "%s/%s", cwd, shared_lib);
+  /* absolute path required on OpenBSD */
+  char *absolute_library_name;
+  asprintf (&absolute_library_name, "%s/%s", cwd, shared_lib);
 
   void *handle;
 
-  /* absolute path required on OpenBSD */
-  handle = dlopen (library_name, RTLD_LAZY);
+  char *library_names[2] = {shared_lib, absolute_library_name};
+  char *errors[2] = {0, 0};
 
+  for (i = 0; i < 2; i++)
+    {
+      char *library_name = library_names[i];
+      handle = dlopen (library_name, RTLD_LAZY);
+
+      if (!handle)
+        {
+          char *error = dlerror ();
+          errors[i] = error;
+        }
+      else
+        break;
+    }
   if (!handle)
     {
-      char *error = dlerror ();
-      if (error)
-        printf ("dlopen error: %s\n", error);
-      else
-        printf ("dlopen error\n");
-
+      for (i = 0; i < 2; i++)
+        {
+          char *library_name = library_names[i];
+          char *error = errors[i];
+          if (errors[i])
+            printf ("%s: dlopen error: %s\n", library_name, error);
+          else
+            printf ("%s: dlopen error\n", library_name);
+        }
       exit (1);
     }
   fooptr = dlsym (handle, "foo");
