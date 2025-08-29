@@ -1,6 +1,5 @@
 #! /bin/sh
 
-echo "JJJ"
-./prog
+#./prog
 
 if ./prog | grep 'inside foo' ; then exit 0; else exit 1; fi
