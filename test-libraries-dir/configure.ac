@@ -2,7 +2,7 @@ AC_INIT([Test-libraries], [7.2dev])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE
 
-LT_INIT([disable-static dlopen])
+LT_INIT([disable-static dlopen win32-dll])
 
 AC_PROG_CC
 
