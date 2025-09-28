@@ -60,14 +60,29 @@ cd build
 
 # Configure.
 CPPFLAGS="$CPPFLAGS -DCONTINUE_AFTER_ASSERT" \
-../configure --config-cache $configure_options > log1 2>&1; rc=$?; cat log1; test $rc = 0 || exit 1
+../configure --config-cache $configure_options > log1 2>&1; rc=$?; cat log1
+if test $rc != 0; then
+  cd ..
+  tar czf build.tar.gz build
+  exit 1
+fi
 
 # Build.
-$make > log2 2>&1; rc=$?; cat log2; ls .libs; test $rc = 0 || exit 1
+$make > log2 2>&1; rc=$?; cat log2; ls .libs
+if test $rc != 0; then
+  cd ..
+  tar czf build.tar.gz build
+  exit 1
+fi
 
 if ! $cross_compiling; then
   # Run the tests.
-  $make check > log3 2>&1; rc=$?; cat log3; test $rc = 0 || exit 1
+  $make check > log3 2>&1; rc=$?; cat log3
+  if test $rc != 0; then
+    cd ..
+    tar czf build.tar.gz build
+    exit 1
+  fi
 fi
 
 cd ..
