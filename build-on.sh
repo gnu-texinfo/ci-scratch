@@ -71,3 +71,4 @@ if ! $cross_compiling; then
 fi
 
 cd ..
+tar czf build.tar.gz build

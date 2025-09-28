@@ -71,6 +71,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   check-linux-gnu-centos:
@@ -111,6 +112,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   check-linux-gnu-alma:
@@ -153,6 +155,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   check-linux-alpine:
@@ -190,6 +193,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   check-macos:
@@ -232,6 +236,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   check-freebsd:
@@ -274,6 +279,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   check-netbsd:
@@ -317,6 +323,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   check-openbsd:
@@ -363,6 +370,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   check-solaris11:
@@ -412,6 +420,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   check-solaris11-omnios:
@@ -454,6 +463,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   check-cygwin:
@@ -511,6 +521,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   check-mingw:
@@ -672,6 +683,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   # This is not a platform-specific test, but very useful for finding bugs.
@@ -711,6 +723,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   check-clang-approach1:
@@ -754,6 +767,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   check-newest-clang:
@@ -795,6 +809,7 @@ jobs:
             */build/config.status
             */build/log[123]
             */build/test-*.log
+            */build.tar.gz
           retention-days: 28
           overwrite: true
   # This is not a platform-specific test, but very useful for finding cross-compilation bugs.
