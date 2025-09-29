@@ -1,6 +1,8 @@
 
 AUTOMAKE_OPTIONS = foreign
 
+ACLOCAL_AMFLAGS = -I build-aux/m4
+
 noinst_PROGRAMS = prog
 
 prog_SOURCES = prog.c
