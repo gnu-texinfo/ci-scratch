@@ -47,7 +47,8 @@ done
 # test-libraries-fail: test dlopening with libraries dependencies.
 #cd test-libraries-ok || exit 1
 #cd test-libraries-fail || exit 1
-cd test-libraries-dir || exit 1
+#cd test-libraries-dir || exit 1
+cd test-libraries-dir-module-dlpreopen || exit 1
 
 # Bring the time stamps into an order that will not require autoconf, automake, etc. to run again.
 sleep 1; touch `find . -name aclocal.m4 -type f`
